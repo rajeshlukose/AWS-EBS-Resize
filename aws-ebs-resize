@@ -1,0 +1,28 @@
+There’s no need to stop instance and detach EBS volume to resize it anymore
+We have to  increase boot drive of Ubuntu from 10G up to 20G “on-the-fly”.
+step-1) login into AWS web console -> EBS -> right mouse click on the one you wish to resize ->
+“Modify Volume” -> change “Size” field and click [Modify] button
+Click Yes to continue.
+step-2) ssh into the instance and resize the partition:
+let’s list block devices attached to our box:
+lsblk
+NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+xvda    202:0    0  20G  0 disk
+└─xvda1 202:1    0   10G  0 part /
+As you can see /dev/xvda1 is still 10 GiB partition on a 20 GiB device and there are no other partitions on the volume. 
+Let’s use “growpart” to resize 10G partition up to 20G:
+# resize partition
+
+*growpart /dev/xvda 1
+
+Check the Disk space after the growpart command execution
+lsblk
+NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+xvda    202:0    0  20G  0 disk
+└─xvda1 202:1    0  20G  0 part /
+
+*resize filesystem
+
+resize2fs /dev/xvda1
+
+There is no need to use fdisk with delete / recreate partitions
